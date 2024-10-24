@@ -14,7 +14,7 @@
 - [Shortcodes](#shortcodes)
 - [Templates](#templates)
 - [Developer Documentation](#developer-documentation)
-  - [Directory Structure](#directory-structure)
+  - [API Endpoints](#api-endpoints)
   - [Hooks and Filters](#hooks-and-filters)
 - [Changelog](#changelog)
 - [Frequently Asked Questions](#frequently-asked-questions)
@@ -153,6 +153,70 @@ Pre-Order Ultra includes customizable templates for the "Notify Me" form and pre
 
 ## Developer Documentation
 
+### API Endpoints
+
+Pre-Order Ultra provides a set of REST API endpoints to manage subscriptions and notifications. Below are the key endpoints:
+
+#### Base Namespace:
+`/wp-json/pre-order-ultra/v1/`
+
+#### Endpoints:
+
+- **Create Subscription**  
+  - **Method**: `POST`
+  - **Route**: `/subscriptions`
+  - **Description**: Creates a new subscription for a product, either for logged-in users or guests.
+  - **Parameters**:
+    - `name` (string, required): The subscriber's name.
+    - `email` (string, required): The subscriber's email.
+    - `phone_number` (string, optional): The subscriber's phone number.
+    - `product_id` (int, required): The product to subscribe to.
+
+- **Get Subscriptions by Product**  
+  - **Method**: `GET`
+  - **Route**: `/subscriptions`
+  - **Description**: Retrieves active subscriptions for a specific product.
+  - **Parameters**:
+    - `product_id` (int, required): The ID of the product.
+
+- **Update Subscription**  
+  - **Method**: `PUT/PATCH`
+  - **Route**: `/subscriptions/{id}`
+  - **Description**: Updates an existing subscription’s details such as name, email, or phone number.
+  - **Parameters**:
+    - `name` (string, optional): The updated name of the subscriber.
+    - `email` (string, optional): The updated email of the subscriber.
+    - `phone_number` (string, optional): The updated phone number of the subscriber.
+
+- **Delete Subscription**  
+  - **Method**: `DELETE`
+  - **Route**: `/subscriptions/{id}`
+  - **Description**: Marks a subscription as deleted.
+
+- **Mark Subscription as Notified**  
+  - **Method**: `PUT/PATCH`
+  - **Route**: `/subscriptions/{id}/mark-notified`
+  - **Description**: Marks a subscription as "notified" when the product becomes available.
+
+- **Bulk Mark Subscriptions as Notified**  
+  - **Method**: `POST`
+  - **Route**: `/subscriptions/bulk-mark-notified`
+  - **Description**: Marks multiple subscriptions as "notified."
+  - **Parameters**:
+    - `ids` (array, required): List of subscription IDs to mark as notified.
+
+- **Unsubscribe**  
+  - **Method**: `DELETE`
+  - **Route**: `/subscriptions/unsubscribe`
+  - **Description**: Allows users to unsubscribe from a product by providing their email and product ID.
+  - **Parameters**:
+    - `email` (string, required): The email of the subscriber.
+    - `product_id` (int, required): The product ID to unsubscribe from.
+
+- **Get Subscription Statistics**  
+  - **Method**: `GET`
+  - **Route**: `/subscriptions/statistics`
+  - **Description**: Retrieves statistics for all subscriptions, including totals for active, notified, and deleted subscriptions.
 
 ### Hooks and Filters
 
