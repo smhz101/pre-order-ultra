@@ -1,33 +1,36 @@
 jQuery(document).ready(function ($) {
+    var $enablePreOrder = $('#_enable_pre_order');
+    var $preOrderSettingsPanel = $('.pre-order-settings-panel');
+    var $preOrderDateFields = $('.pre_order_date_field');
+    var $preOrderPriceType = $('#_pre_order_price_type');
 
-    // Toggle pre-order fields based on enable_pre_order checkbox
     function togglePreOrderFields() {
-        if ($('#_enable_pre_order').is(':checked')) {
-            $('.pre-order-settings-panel.hidden').show();  // Show the hidden div
+        if ($enablePreOrder.is(':checked')) {
+            $preOrderSettingsPanel.removeClass('hidden').show();
         } else {
-            $('.pre-order-settings-panel.hidden').hide();  // Hide the hidden div
+            $preOrderSettingsPanel.addClass('hidden').hide();
         }
     }
 
-    // Toggle date picker based on pre_order_date_mode radio button
     function toggleDateField() {
-        if ($('input[name="_pre_order_date_mode"]:checked').val() === 'set_date') {
-            $('._pre_order_date_field ').closest('.form-field').show();
+        var selectedVal = $('input[name="_pre_order_date_mode"]:checked').val();
+        console.log('Date mode selected:', selectedVal);
+        if (selectedVal === 'set_date') {
+            console.log('Showing pre_order_date_field');
+            $('#_pre_order_date').closest("p").removeClass('hidden').show();
+            $('#_pre_order_date').removeClass('hidden').show();
         } else {
-            $('._pre_order_date_field').closest('.form-field').hide();
+            console.log('Hiding pre_order_date_field');
+            $('#_pre_order_date').closest("p").addClass('hidden').hide();
+            $('#_pre_order_date').addClass('hidden').hide();
         }
     }
 
-    // Toggle input fields based on pre_order_price_type select box
     function togglePriceTypeFields() {
-        var selectedType = $('#_pre_order_price_type').val();
+        var selectedType = $preOrderPriceType.val();
         
         // Hide all specific price type fields first
-        $('.pre_order_price_type_fixed_price').hide();
-        $('.pre_order_price_type_discount_percent').hide();
-        $('.pre_order_price_type_discount_fixed').hide();
-        $('.pre_order_price_type_increase_percent').hide();
-        $('.pre_order_price_type_increase_fixed').hide();
+        $('.pre_order_price_type_fixed_price, .pre_order_price_type_discount_percent, .pre_order_price_type_discount_fixed, .pre_order_price_type_increase_percent, .pre_order_price_type_increase_fixed').hide();
         
         // Show the selected one
         if (selectedType === 'fixed_price') {
@@ -44,16 +47,12 @@ jQuery(document).ready(function ($) {
     }
 
     // Initial load
-    togglePreOrderFields();  // Check the pre-order enable checkbox state
-    togglePriceTypeFields(); // Check the price type state
+    togglePreOrderFields();
+    toggleDateField();
+    togglePriceTypeFields();
 
     // On change events
-    $('#_enable_pre_order').change(function () {
-        togglePreOrderFields();
-    });
-
-    $('#_pre_order_price_type').change(function () {
-        togglePriceTypeFields();
-    });
-
+    $enablePreOrder.change(togglePreOrderFields);
+    $('input[name="_pre_order_date_mode"]').change(toggleDateField);
+    $preOrderPriceType.change(togglePriceTypeFields);
 });

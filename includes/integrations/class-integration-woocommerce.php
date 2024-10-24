@@ -63,9 +63,6 @@ class Integration_WooCommerce {
         // Get the product-level pre-order setting (fallback to global if not set)
         $enable_pre_order = get_post_meta( $post->ID, '_enable_pre_order', true );
 
-        error_log('POST Global: ' . $global_pre_orders_enabled);
-        error_log('POST Post: ' . $enable_pre_order);
-
         // If global pre-orders are enabled and the product-level setting is not set, use the global setting
         if ( 'yes' === $global_pre_orders_enabled && empty( $enable_pre_order ) ) {
             $enable_pre_order = 'yes';
@@ -94,10 +91,10 @@ class Integration_WooCommerce {
                     'id'          => '_enable_pre_order',
                     'label'       => __( 'Enable Pre-Order', 'pre-order-ultra' ),
                     'description' => __( 'Allow customers to pre-order this product.', 'pre-order-ultra' ),
-                    'value'       => $enable_pre_order ? 'yes' : 'no',
+                    'value'       => $enable_pre_order,
                 ) ); 
-                ?>
 
+                ?>
                 <div class="pre-order-settings-panel hidden">
                     <?php
                     // Pre-Order Availability Date
@@ -252,76 +249,95 @@ class Integration_WooCommerce {
      * @return bool
      */
     public function check_purchasable( $purchasable, $product ) {
-        // Fetch the settings from WooCommerce
+        // Fetch the global setting for auto pre-order on out-of-stock products
         $enable_pre_order_out_of_stock = get_option( 'auto_pre_order_out_of_stock', 'yes' );
-        $pre_order_status_auto = get_option( 'apply_pre_order_status_auto', 'no' );
         
-        // If the product is out of stock and global option is enabled, allow pre-order
+        // If the product is out of stock and global setting is enabled, allow pre-order
         if ( 'yes' === $enable_pre_order_out_of_stock && ! $product->is_in_stock() ) {
             return true;
         }
-
+    
         // Additional checks for specific pre-order settings
         $enable_pre_order = get_post_meta( $product->get_id(), '_enable_pre_order', true );
         $pre_order_date = get_post_meta( $product->get_id(), '_pre_order_date', true );
-
+    
+        // If pre-order is enabled at the product level and the date is set, allow pre-order
         if ( 'yes' === $enable_pre_order && ! empty( $pre_order_date ) ) {
             return true;
         }
-
+    
         return $purchasable;
-    }
+    }    
 
     /**
      * Display pre-order availability notice.
      */
     public function display_pre_order_notice() {
         global $product;
-        
+
+        // Get the global settings for enabling pre-orders
+        $global_pre_orders_enabled = get_option( 'enable_pre_orders_globally', 'no' );
+        $enable_pre_order_out_of_stock = get_option( 'auto_pre_order_out_of_stock', 'yes' );
+
         // Check if pre-order is enabled for the product
         $enable_pre_order = get_post_meta( $product->get_id(), '_enable_pre_order', true );
-        if ( 'yes' !== $enable_pre_order ) {
-            return;
+
+        // Flag to determine if pre-order is via global setting
+        $is_global_pre_order = false;
+
+        // If the product is out of stock and global pre-order for out-of-stock products is enabled
+        if ( 'yes' === $enable_pre_order_out_of_stock && 'yes' === $global_pre_orders_enabled && ! $product->is_in_stock() ) {
+            $is_global_pre_order = true;
+            // Display the pre-order notice
+            echo '<p class="pre-order-notice">' . __( 'This item is available for pre-order.', 'pre-order-ultra' ) . '</p>';
         }
 
-        // Get pre-order date and display the notice
-        $pre_order_date = get_post_meta( $product->get_id(), '_pre_order_date', true );
-        if ( ! empty( $pre_order_date ) ) {
-            $availability_message = sprintf(
-                __( 'This item is available for pre-order. It will be released on %s.', 'pre-order-ultra' ),
-                date_i18n( get_option( 'date_format' ), strtotime( $pre_order_date ) )
-            );
-            echo '<p class="pre-order-notice">' . esc_html( $availability_message ) . '</p>';
+        // If pre-order is enabled at the product level
+        if ( 'yes' === $enable_pre_order ) {
+            $pre_order_date = get_post_meta( $product->get_id(), '_pre_order_date', true );
+            if ( ! empty( $pre_order_date ) ) {
+                $availability_message = sprintf(
+                    __( 'This item is available for pre-order. It will be released on %s.', 'pre-order-ultra' ),
+                    date_i18n( get_option( 'date_format' ), strtotime( $pre_order_date ) )
+                );
+                echo '<p class="pre-order-notice">' . esc_html( $availability_message ) . '</p>';
+            }
         }
-    }
+
+        // Modify the Add to Cart button text only if pre-order is enabled at the product level
+        if ( 'yes' === $enable_pre_order && ! $is_global_pre_order ) {
+            add_filter( 'woocommerce_product_single_add_to_cart_text', array( $this, 'pre_order_button_text' ) );
+            add_filter( 'woocommerce_product_add_to_cart_text', array( $this, 'pre_order_button_text' ) );
+        }
+    }      
 
     /**
      * Modify Add to Cart Button Text for Pre-Order Products
      */
     public function pre_order_button_text( $text ) {
         global $product;
-    
+
         // Ensure WooCommerce product is available
         if ( ! $product ) {
             return $text;
         }
-    
-        // Check if pre-order is enabled for the product
+
+        // Check if pre-order is enabled at the product level
         $enable_pre_order = get_post_meta( $product->get_id(), '_enable_pre_order', true );
-    
+
         if ( 'yes' === $enable_pre_order ) {
             // First, check for product-specific pre-order button text
             $pre_order_button_text = get_post_meta( $product->get_id(), '_pre_order_button_text', true );
-    
+
             // If no product-specific text, fallback to global option
             if ( empty( $pre_order_button_text ) ) {
                 $pre_order_button_text = get_option( 'pre_order_add_to_cart_text', __( 'Pre-Order Now', 'pre-order-ultra' ) );
             }
-    
+
             // Set the button text
             $text = $pre_order_button_text;
         }
-    
+
         return $text;
     }   
 
@@ -338,7 +354,20 @@ class Integration_WooCommerce {
             $enable_pre_order = get_post_meta( $product_id, '_enable_pre_order', true );
             $pre_order_date = get_post_meta( $product_id, '_pre_order_date', true );
 
-            if ( 'yes' === $enable_pre_order && ! empty( $pre_order_date ) ) {
+            // Check global pre-order settings
+            $enable_pre_order_out_of_stock = get_option( 'auto_pre_order_out_of_stock', 'yes' );
+            $product = wc_get_product( $product_id );
+
+            // Determine if pre-order is via global settings
+            $is_global_pre_order = false;
+            if ( 'yes' === $enable_pre_order_out_of_stock && 'yes' === get_option( 'enable_pre_orders_globally', 'no' ) && ! $product->is_in_stock() ) {
+                $is_global_pre_order = true;
+            }
+
+            // Determine if pre-order is via product settings
+            $is_product_pre_order = ( 'yes' === $enable_pre_order && ! empty( $pre_order_date ) );
+
+            if ( $is_global_pre_order || $is_product_pre_order ) {
                 // Set order item meta or status as pre-order
                 $item->add_meta_data( '_pre_order', 'yes', true );
                 $item->save();
@@ -361,7 +390,22 @@ class Integration_WooCommerce {
                 if ( $item->get_meta( '_pre_order' ) === 'yes' ) {
                     // Send pre-order notification to customer
                     $customer_email = $order->get_billing_email();
-                    wp_mail( $customer_email, __( 'Your Pre-Order Update', 'pre-order-ultra' ), __( 'Your pre-order has been processed!', 'pre-order-ultra' ) );
+                    $subject = __( 'Your Pre-Order Update', 'pre-order-ultra' );
+                    $message = __( 'Thank you for your pre-order! We will notify you once your item is available.', 'pre-order-ultra' );
+
+                    // Use WooCommerce email classes for better integration
+                    $mailer = WC()->mailer();
+                    $mails = $mailer->get_emails();
+                    if ( ! empty( $mails ) ) {
+                        foreach ( $mails as $mail ) {
+                            if ( $mail->id === 'customer_completed_order' ) { // You can customize this as needed
+                                $mail->trigger( $order_id );
+                            }
+                        }
+                    } else {
+                        // Fallback to wp_mail if WooCommerce mailer is not available
+                        wp_mail( $customer_email, $subject, $message );
+                    }
                 }
             }
         }
@@ -373,8 +417,17 @@ class Integration_WooCommerce {
     public function adjust_pre_order_price( $price_html, $product ) {
         // Check if pre-order is enabled for the product
         $enable_pre_order = get_post_meta( $product->get_id(), '_enable_pre_order', true );
+
+        // Fetch global settings
+        $enable_pre_order_out_of_stock = get_option( 'auto_pre_order_out_of_stock', 'yes' );
+
+        // If out of stock and global pre-order is enabled, do not apply pre-order price adjustments
+        if ( 'yes' === $enable_pre_order_out_of_stock && ! $product->is_in_stock() ) {
+            return $price_html; // Return original price without adjustments
+        }
+
         if ( 'yes' !== $enable_pre_order ) {
-            return $price_html;
+            return $price_html; // Pre-order not enabled at product level
         }
 
         // Get pre-order price type and other pre-order metadata
@@ -430,7 +483,19 @@ class Integration_WooCommerce {
         $product = wc_get_product( $cart_item['product_id'] );
         $enable_pre_order = get_post_meta( $product->get_id(), '_enable_pre_order', true );
 
-        if ( 'yes' === $enable_pre_order ) {
+        // Fetch global settings
+        $enable_pre_order_out_of_stock = get_option( 'auto_pre_order_out_of_stock', 'yes' );
+
+        // Determine if pre-order is via global settings
+        $is_global_pre_order = false;
+        if ( 'yes' === $enable_pre_order_out_of_stock && 'yes' === get_option( 'enable_pre_orders_globally', 'no' ) && ! $product->is_in_stock() ) {
+            $is_global_pre_order = true;
+        }
+
+        // Determine if pre-order is via product settings
+        $is_product_pre_order = ( 'yes' === $enable_pre_order );
+
+        if ( $is_global_pre_order || $is_product_pre_order ) {
             $product_name .= ' <span class="pre-order-label">(' . __( 'Pre-Order', 'pre-order-ultra' ) . ')</span>';
         }
 
