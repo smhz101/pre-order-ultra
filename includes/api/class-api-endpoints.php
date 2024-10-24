@@ -168,9 +168,17 @@ class API_Endpoints {
     }
 
     /**
-     * Define Subscription Arguments for Creation
+     * Define the subscription arguments for API requests.
      *
-     * @return array
+     * Returns an array of required and optional arguments for creating or updating a subscription,
+     * along with validation rules for each argument.
+     *
+     * @return array An array of argument definitions for subscription-related API endpoints.
+     * 
+     * @param string $name The name of the user subscribing (required, non-empty string).
+     * @param string $email The email address of the user subscribing (required, valid email format).
+     * @param string $phone_number The phone number of the user subscribing (optional, string).
+     * @param int $product_id The product ID the user is subscribing to (required, valid product ID).
      */
     private function get_subscription_args() {
         return array(
@@ -202,10 +210,25 @@ class API_Endpoints {
     }
 
     /**
-     * Permissions Check for API Access
+     * Permissions check for API access.
      *
-     * @param WP_REST_Request $request
+     * Validates whether the current user has permission to perform actions on certain API endpoints.
+     * Adjusts permissions based on the route and method. For example, restricts deletion of subscriptions
+     * to users with appropriate capabilities.
+     *
+     * @param WP_REST_Request $request The REST API request object.
+     *
+     * @return bool|WP_Error True if the request has permission, or a WP_Error object if not authorized.
+     * 
+     * @api
+     *  - Method: DELETE, POST, GET
+     *  - Route: /wp-json/pre-order-ultra/v1/subscriptions/{id}
+     * 
+     * @param string $route The API route being accessed.
+     * 
      * @return bool|WP_Error
+     *  - True: If the user is authorized to perform the action.
+     *  - 403: If the user does not have the required capabilities (for example, deleting a subscription).
      */
     public function permissions_check( $request ) {
         // For public access, you might want to adjust permissions accordingly.
@@ -226,8 +249,25 @@ class API_Endpoints {
     /**
      * Permissions check for the unsubscribe endpoint.
      *
-     * @param WP_REST_Request $request The REST API request.
-     * @return bool|WP_Error True if the request has permission, WP_Error otherwise.
+     * Validates the unsubscribe request by ensuring that required parameters are present and valid.
+     * Optionally, rate limiting can be implemented to prevent abuse of the endpoint.
+     *
+     * @param WP_REST_Request $request The REST API request object containing the unsubscribe parameters.
+     *
+     * @return bool|WP_Error True if the request is valid, or a WP_Error object if validation fails.
+     * 
+     * @api
+     *  - Method: DELETE
+     *  - Route: /wp-json/pre-order-ultra/v1/subscriptions/unsubscribe
+     * 
+     * @param string $email The email address of the user requesting to unsubscribe.
+     * @param int $product_id The product ID from which the user wishes to unsubscribe.
+     * 
+     * @return bool|WP_Error
+     *  - True: If all parameters are valid and the request is allowed.
+     *  - 400: If required parameters are missing or invalid (email, product_id).
+     *  - 404: If the product is not found.
+     *  - Optionally, 429: If rate limiting is implemented and the limit is exceeded.
      */
     public function permissions_check_unsubscribe( $request ) {
         // Since the unsubscribe endpoint is intended for public access,
@@ -295,12 +335,26 @@ class API_Endpoints {
         return true;
     }
 
-
     /**
-     * Create a New Subscription
+     * Create a new subscription.
      *
-     * @param WP_REST_Request $request
+     * Creates a new subscription for a product, either for a logged-in user or a guest.
+     * If the user is already subscribed to the product, a message indicating so is returned.
+     *
+     * @param WP_REST_Request $request The REST API request object containing subscription details.
+     *
+     * @return WP_REST_Response A response indicating whether the subscription creation was successful or not.
+     * 
+     * @api
+     *  - Method: POST
+     *  - Route: /wp-json/pre-order-ultra/v1/subscriptions
+     * 
+     * @param array $parameters The parameters sent via the request (name, email, phone number, product_id).
+     * 
      * @return WP_REST_Response
+     *  - 201: If the subscription is successfully created.
+     *  - 200: If the user is already subscribed to the product.
+     *  - 500: If there was an error during subscription creation.
      */
     public function create_subscription( $request ) {
         $parameters = $request->get_json_params();
@@ -378,6 +432,25 @@ class API_Endpoints {
         return new WP_REST_Response( $data, 200 );
     }
 
+    /**
+     * Update an existing subscription.
+     *
+     * @param WP_REST_Request $request The REST API request object containing the parameters.
+     * 
+     * @return WP_REST_Response The REST response with a success or error message.
+     * 
+     * @api
+     *  - Method: PUT/PATCH
+     *  - Route: /wp-json/pre-order-ultra/v1/subscriptions/{id}
+     * 
+     * @param int $subscription_id The ID of the subscription to update.
+     * @param array $parameters The parameters sent via the request containing updated subscription details.
+     * 
+     * @return WP_REST_Response
+     *  - 200: If the subscription is updated successfully.
+     *  - 404: If the subscription is not found.
+     *  - 500: If there was a failure in updating the subscription.
+     */
     public function update_subscription( $request ) {
         $subscription_id = intval( $request->get_param( 'id' ) );
         $parameters = $request->get_json_params();
@@ -413,10 +486,23 @@ class API_Endpoints {
     }
 
     /**
-     * Delete a Subscription
+     * Delete a subscription.
      *
-     * @param WP_REST_Request $request
+     * Marks a specific subscription as 'deleted' based on the provided subscription ID.
+     *
+     * @param WP_REST_Request $request The REST API request object containing the subscription ID.
+     *
+     * @return WP_REST_Response A response indicating whether the deletion was successful or not.
+     * 
+     * @api
+     *  - Method: DELETE
+     *  - Route: /wp-json/pre-order-ultra/v1/subscriptions/{id}
+     * 
+     * @param int $subscription_id The ID of the subscription to mark as deleted.
+     * 
      * @return WP_REST_Response
+     *  - 200: If the subscription status is successfully updated to 'deleted'.
+     *  - 500: If the subscription deletion fails.
      */
     public function delete_subscription( $request ) {
         $subscription_id = intval( $request->get_param( 'id' ) );
@@ -434,10 +520,23 @@ class API_Endpoints {
     }
 
     /**
-     * Mark a Subscription as Notified
+     * Mark a subscription as notified.
      *
-     * @param WP_REST_Request $request
+     * Updates the status of a specific subscription to 'notified' based on the provided subscription ID.
+     *
+     * @param WP_REST_Request $request The REST API request object containing the subscription ID.
+     *
+     * @return WP_REST_Response A response indicating whether the update was successful or not.
+     * 
+     * @api
+     *  - Method: PUT/PATCH
+     *  - Route: /wp-json/pre-order-ultra/v1/subscriptions/{id}/mark-notified
+     * 
+     * @param int $subscription_id The ID of the subscription to mark as notified.
+     * 
      * @return WP_REST_Response
+     *  - 200: If the subscription status is successfully updated to 'notified'.
+     *  - 500: If the subscription update fails.
      */
     public function mark_subscription_notified( $request ) {
         $subscription_id = intval( $request->get_param( 'id' ) );
@@ -454,7 +553,24 @@ class API_Endpoints {
         }
     }
 
-    // 
+    /**
+     * Bulk mark subscriptions as notified.
+     *
+     * Marks multiple subscriptions as 'notified' based on the provided IDs.
+     *
+     * @param WP_REST_Request $request The REST API request object containing the subscription IDs.
+     *
+     * @return WP_REST_Response A response containing the results for each subscription update.
+     * 
+     * @api
+     *  - Method: POST
+     *  - Route: /wp-json/pre-order-ultra/v1/subscriptions/bulk-mark-notified
+     * 
+     * @param array $ids An array of subscription IDs to mark as notified.
+     * 
+     * @return WP_REST_Response
+     *  - 200: Success response with the status of each subscription update.
+     */
     public function bulk_mark_notified( $request ) {
         $ids = array_map( 'intval', $request->get_param( 'ids' ) );
 
@@ -473,7 +589,26 @@ class API_Endpoints {
         return new WP_REST_Response( array( 'results' => $results ), 200 );
     }
 
-    // 
+    /**
+     * Unsubscribe a user from a product.
+     *
+     * Allows a user to unsubscribe from receiving notifications for a specific product using their email.
+     *
+     * @param WP_REST_Request $request The REST API request object containing the email and product ID.
+     *
+     * @return WP_REST_Response A response with a success or error message.
+     * 
+     * @api
+     *  - Method: DELETE
+     *  - Route: /wp-json/pre-order-ultra/v1/subscriptions/unsubscribe
+     * 
+     * @param string $email The email of the user unsubscribing.
+     * @param int $product_id The product ID from which the user wants to unsubscribe.
+     * 
+     * @return WP_REST_Response
+     *  - 200: If successfully unsubscribed.
+     *  - 404: If the subscription is not found or already unsubscribed.
+     */
     public function unsubscribe( $request ) {
         $email = sanitize_email( $request->get_param( 'email' ) );
         $product_id = intval( $request->get_param( 'product_id' ) );
@@ -489,6 +624,23 @@ class API_Endpoints {
         }
     }
 
+    /**
+     * Get subscription statistics.
+     *
+     * Returns the statistics for all subscriptions, including the total number of subscriptions,
+     * the number of active, notified, and deleted subscriptions.
+     *
+     * @param WP_REST_Request $request The REST API request object (no parameters required).
+     *
+     * @return WP_REST_Response A response with subscription statistics.
+     * 
+     * @api
+     *  - Method: GET
+     *  - Route: /wp-json/pre-order-ultra/v1/subscriptions/statistics
+     * 
+     * @return WP_REST_Response
+     *  - 200: Success response with subscription statistics (total, active, notified, deleted).
+     */
     public function get_statistics( $request ) {
         $subscription_manager = Subscription_Manager::get_instance();
     
