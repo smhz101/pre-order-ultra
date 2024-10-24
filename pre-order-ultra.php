@@ -29,6 +29,10 @@ final class Pre_Order_Ultra {
      * Constructor
      */
     private function __construct() {
+        // Register activation and deactivation hooks
+        register_activation_hook( __FILE__, array( $this, 'on_activation' ) );
+        register_deactivation_hook( __FILE__, array( $this, 'on_deactivation' ) );
+
         // Define plugin constants
         $this->define_constants();
 
@@ -88,6 +92,14 @@ final class Pre_Order_Ultra {
     }
 
     /**
+     * Intialize Cron Job
+     */
+    private function init_cron() {
+        require_once PRE_ORDER_ULTRA_PLUGIN_PATH . 'includes/core/class-cron-job.php';
+        Cron_Job::get_instance();
+    }
+
+    /**
      * Get Plugin Instance
      *
      * @return Pre_Order_Ultra
@@ -97,6 +109,59 @@ final class Pre_Order_Ultra {
             self::$instance = new self();
         }
         return self::$instance;
+    }
+
+    /**
+     * Handle Plugin Activation
+     */
+    public function on_activation() {
+        // Create the custom subscription table
+        $this->create_subscription_table();
+
+        // Schedule the cron event
+        if ( ! wp_next_scheduled( 'pre_order_ultra_send_notifications' ) ) {
+            wp_schedule_event( time(), 'hourly', 'pre_order_ultra_send_notifications' );
+        }
+    }
+
+    /**
+     * Handle Plugin Deactivation
+     */
+    public function on_deactivation() {
+        // Unschedule the cron event
+        $timestamp = wp_next_scheduled( 'pre_order_ultra_send_notifications' );
+        if ( $timestamp ) {
+            wp_unschedule_event( $timestamp, 'pre_order_ultra_send_notifications' );
+        }
+    }
+
+    /**
+     * Create the subscriptions table
+     */
+    private function create_subscription_table() {
+        global $wpdb;
+    
+        // Define table name with prefix
+        $table_name = $wpdb->prefix . 'pre_order_subscriptions';
+        $charset_collate = $wpdb->get_charset_collate();
+    
+        // SQL query to create the table
+        $sql = "CREATE TABLE $table_name (
+            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            user_id BIGINT(20) UNSIGNED NULL,
+            name VARCHAR(255) NOT NULL,
+            email VARCHAR(100) NOT NULL,
+            phone_number VARCHAR(20) NULL,
+            product_id BIGINT(20) UNSIGNED NOT NULL,
+            subscription_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            status VARCHAR(20) DEFAULT 'active' NOT NULL,
+            PRIMARY KEY  (id),
+            KEY product_id (product_id),
+            KEY email (email)
+        ) $charset_collate;";
+    
+        // Use maybe_create_table to avoid recreating an existing table
+        maybe_create_table($table_name, $sql);
     }
 
 }
