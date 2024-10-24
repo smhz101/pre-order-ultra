@@ -1,0 +1,49 @@
+.notify-me-container {
+    margin-top: 20px;
+}
+
+.notify-me-button {
+    background-color: #0071a1;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+}
+
+.notify-me-button:hover {
+    background-color: #005177;
+}
+
+.notify-me-form {
+    margin-top: 15px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    background-color: #f9f9f9;
+}
+
+.notify-me-form p {
+    margin-bottom: 10px;
+}
+
+.notify-me-form label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.notify-me-form input {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+#pre_order_ultra_form_message p.success {
+    color: green;
+}
+
+#pre_order_ultra_form_message p.error {
+    color: red;
+}
+
+.hidden {
+    display: none;
+}

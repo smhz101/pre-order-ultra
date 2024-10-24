@@ -36,6 +36,9 @@ final class Pre_Order_Ultra {
         // Define plugin constants
         $this->define_constants();
 
+        // Include required filies
+        $this->init_includes();
+
         // Load text domain for translations
         add_action( 'init', array( $this, 'load_textdomain' ) );
 
@@ -49,6 +52,18 @@ final class Pre_Order_Ultra {
 
         // Initialize API
         $this->init_api();
+    }
+
+    /**
+     * Get Plugin Instance
+     *
+     * @return Pre_Order_Ultra
+     */
+    public static function get_instance() {
+        if ( null === self::$instance ) {
+            self::$instance = new self();
+        }
+        return self::$instance;
     }
 
     /**
@@ -68,10 +83,22 @@ final class Pre_Order_Ultra {
     }
 
     /**
+     * Intialize Cron Job
+     */
+    public function init_includes() {
+        require_once PRE_ORDER_ULTRA_PLUGIN_PATH . 'includes/core/class-pre-order.php';
+        
+        require_once PRE_ORDER_ULTRA_PLUGIN_PATH . 'includes/core/class-cron-job.php';
+        require_once PRE_ORDER_ULTRA_PLUGIN_PATH . 'includes/subscriptions/class-subscription-manager.php';
+        require_once PRE_ORDER_ULTRA_PLUGIN_PATH . 'includes/subscriptions/class-subscription-handler.php';
+
+        require_once PRE_ORDER_ULTRA_PLUGIN_PATH . 'includes/api/class-api-endpoints.php';
+    }
+
+    /**
      * Initialize Core Functionalities
      */
     private function init_core() {
-        require_once PRE_ORDER_ULTRA_PLUGIN_PATH . 'includes/core/class-pre-order.php';
         Pre_Order_Core::get_instance();
     }
 
@@ -80,6 +107,8 @@ final class Pre_Order_Ultra {
      */
     private function init_admin() {
         require_once PRE_ORDER_ULTRA_PLUGIN_PATH . 'includes/admin/class-admin-settings.php';
+        require_once PRE_ORDER_ULTRA_PLUGIN_PATH . 'includes/admin/class-notify-me-admin.php';
+    
         Admin_Settings::get_instance();
     }
 
@@ -87,28 +116,7 @@ final class Pre_Order_Ultra {
      * Initialize API Endpoints
      */
     private function init_api() {
-        require_once PRE_ORDER_ULTRA_PLUGIN_PATH . 'includes/api/class-api-endpoints.php';
         API_Endpoints::get_instance();
-    }
-
-    /**
-     * Intialize Cron Job
-     */
-    private function init_cron() {
-        require_once PRE_ORDER_ULTRA_PLUGIN_PATH . 'includes/core/class-cron-job.php';
-        Cron_Job::get_instance();
-    }
-
-    /**
-     * Get Plugin Instance
-     *
-     * @return Pre_Order_Ultra
-     */
-    public static function get_instance() {
-        if ( null === self::$instance ) {
-            self::$instance = new self();
-        }
-        return self::$instance;
     }
 
     /**
@@ -135,14 +143,23 @@ final class Pre_Order_Ultra {
         }
     }
 
+    public function table_name() {
+        global $wpdb;
+    
+        // Define table name with prefix
+        return $wpdb->prefix . 'pre_order_subscriptions';
+    }
+
     /**
      * Create the subscriptions table
      */
     private function create_subscription_table() {
+        require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+
         global $wpdb;
     
         // Define table name with prefix
-        $table_name = $wpdb->prefix . 'pre_order_subscriptions';
+        $table_name = $this->table_name();
         $charset_collate = $wpdb->get_charset_collate();
     
         // SQL query to create the table
