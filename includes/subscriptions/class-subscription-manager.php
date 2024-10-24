@@ -158,4 +158,121 @@ class Subscription_Manager {
         return $result > 0;
     }
 
+    /**
+     * Get a single subscription by ID
+     *
+     * @param int $subscription_id
+     * @return object|null
+     */
+    public function get_subscription( $subscription_id ) {
+        global $wpdb;
+
+        $subscription = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT * FROM {$this->table_name} WHERE id = %d",
+                $subscription_id
+            )
+        );
+
+        return $subscription;
+    }
+
+    /**
+     * Update subscription details
+     *
+     * @param int $subscription_id
+     * @param array $data
+     * @return int|false
+     */
+    public function update_subscription_details( $subscription_id, $data ) {
+        global $wpdb;
+
+        // Sanitize data
+        $update_data = array();
+        $format = array();
+
+        if ( isset( $data['name'] ) ) {
+            $update_data['name'] = sanitize_text_field( $data['name'] );
+            $format[] = '%s';
+        }
+
+        if ( isset( $data['email'] ) ) {
+            $update_data['email'] = sanitize_email( $data['email'] );
+            $format[] = '%s';
+        }
+
+        if ( isset( $data['phone_number'] ) ) {
+            $update_data['phone_number'] = sanitize_text_field( $data['phone_number'] );
+            $format[] = '%s';
+        }
+
+        if ( empty( $update_data ) ) {
+            return false;
+        }
+
+        $updated = $wpdb->update(
+            $this->table_name,
+            $update_data,
+            array( 'id' => intval( $subscription_id ) ),
+            $format,
+            array( '%d' )
+        );
+
+        return $updated;
+    }
+
+    /**
+     * Delete subscription by email and product ID
+     *
+     * @param string $email
+     * @param int $product_id
+     * @return bool
+     */
+    public function delete_subscription_by_email_product( $email, $product_id ) {
+        global $wpdb;
+
+        $deleted = $wpdb->update(
+            $this->table_name,
+            array( 'status' => 'deleted' ),
+            array( 'email' => $email, 'product_id' => $product_id, 'status' => 'active' ),
+            array( '%s' ),
+            array( '%s', '%d', '%s' )
+        );
+
+        return $deleted > 0;
+    }
+
+    /**
+     * Get total subscriptions
+     *
+     * @return int
+     */
+    public function get_total_subscriptions() {
+        global $wpdb;
+
+        $total = $wpdb->get_var(
+            "SELECT COUNT(*) FROM {$this->table_name}"
+        );
+
+        return intval( $total );
+    }
+
+    /**
+     * Get subscription count by status
+     *
+     * @param string $status
+     * @return int
+     */
+    public function get_status_count( $status ) {
+        global $wpdb;
+
+        $count = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*) FROM {$this->table_name} WHERE status = %s",
+                $status
+            )
+        );
+
+        return intval( $count );
+    }
 }
