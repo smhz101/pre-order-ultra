@@ -1,6 +1,6 @@
 # Pre-Order Ultra
 
-**Pre-Order Ultra** is a powerful WooCommerce plugin that enables store owners to manage pre-orders seamlessly. Whether you're launching a new product or managing out-of-stock inventory, Pre-Order Ultra provides the tools you need to capture customer interest and streamline your sales process.
+**Pre-Order Ultra** is a robust WooCommerce plugin that empowers store owners to manage pre-orders effortlessly. Whether you're launching a new product or handling out-of-stock inventory, Pre-Order Ultra offers the essential tools to capture customer interest and streamline your sales process.
 
 ## Table of Contents
 
@@ -31,20 +31,20 @@
 - **Pre-Order for Out-of-Stock Products:**
   - Enable customers to subscribe for notifications when out-of-stock products become available.
   - Manage subscriptions for both logged-in users and guests.
-  - Automatically notify subscribers via email/SMS when products are restocked.
+  - Automatically notify subscribers via email when products are restocked.
 
 - **Notify Me When Available:**
   - Offer a "Notify Me" button on product pages.
   - Collect subscriber information securely.
-  - Handle subscriptions with ease through an admin interface.
+  - Handle subscriptions through an intuitive admin interface.
 
 - **Customizable Notifications:**
-  - Send personalized emails or SMS notifications to subscribers.
-  - Customize email/SMS templates to match your brand's voice.
+  - Send personalized emails to subscribers upon product availability.
+  - Customize email templates to align with your brand's voice.
 
 - **Admin Management:**
   - View and manage all pre-order and subscription data from the WordPress dashboard.
-  - Export subscriber lists for marketing purposes.
+  - Export subscriber lists for marketing and analysis purposes.
 
 - **Flexible Pricing Options:**
   - Apply different pricing strategies for pre-orders, including discounts or fixed pricing.
@@ -64,15 +64,15 @@
    - Click **Install Now** and then **Activate** the plugin.
 
 3. **Activate the Plugin:**
-   - After activation, you'll be prompted to configure the plugin settings.
+   - Upon activation, the plugin will create necessary database tables and schedule cron events automatically.
 
 ## Configuration
 
 1. **Global Settings:**
-   - Navigate to **WooCommerce > Settings > Pre-Order Ultra**.
+   - Navigate to **WooCommerce > Settings > Products > Pre-Order**.
    - **Enable Pre-Orders Globally:** Toggle to enable or disable pre-order functionality across all products.
-   - **Auto Pre-Order for Out-of-Stock Products:** Enable automatic pre-order options when products are out of stock.
-   - **Notification Settings:** Configure email and SMS settings for subscriber notifications.
+   - **Automatically Enable Pre-Order for Out-of-Stock Products:** Enable this to allow pre-orders automatically when products are out of stock.
+   - **Notification Settings:** Configure email settings for subscriber notifications.
 
 2. **Product-Level Settings:**
    - Edit a product in **WooCommerce > Products**.
@@ -105,7 +105,7 @@
 ### Enabling Pre-Orders for Out-of-Stock Products
 
 1. **Global Pre-Order Settings:**
-   - Ensure that **Auto Pre-Order for Out-of-Stock Products** is enabled in the global settings.
+   - Ensure that **Automatically Enable Pre-Order for Out-of-Stock Products** is enabled in the global settings.
 
 2. **Manage Product Stock:**
    - For products that are out of stock, pre-order options will automatically be available based on the global settings.
@@ -126,7 +126,7 @@
 
 3. **Data Handling:**
    - Subscriptions are stored securely in a custom database table.
-   - Subscribers receive confirmation emails/SMS upon subscribing.
+   - Subscribers receive confirmation emails upon subscribing.
 
 4. **Notifications Upon Availability:**
    - When the product becomes available, a cron job triggers and sends notifications to all subscribers.
@@ -153,6 +153,7 @@ Pre-Order Ultra includes customizable templates for the "Notify Me" form and pre
 
 ## Developer Documentation
 
+
 ### Hooks and Filters
 
 Pre-Order Ultra utilizes several WordPress and WooCommerce hooks and filters to extend functionality. Below are some key hooks you can leverage:
@@ -161,6 +162,7 @@ Pre-Order Ultra utilizes several WordPress and WooCommerce hooks and filters to 
   - `pre_order_ultra_init`: Fires on plugin initialization.
   - `pre_order_ultra_notify_me_submission`: Fires when a user submits the "Notify Me" form.
   - `pre_order_ultra_product_restocked`: Fires when a product's stock status changes to "In Stock."
+  - `pre_order_ultra_send_notifications`: Cron event to send notifications.
 
 - **Filters:**
   - `pre_order_ultra_add_to_cart_text`: Modify the "Add to Cart" button text for pre-order products.
@@ -187,13 +189,22 @@ Developers can extend Pre-Order Ultra by hooking into its actions and filters or
   - Pre-order for new product launches with release dates and countdown timers.
   - Pre-order for out-of-stock products with "Notify Me When Available" functionality.
   - Admin interface for managing pre-orders and subscriptions.
-  - Email/SMS notifications to subscribers upon product availability.
+  - Email notifications to subscribers upon product availability.
   - Integration with WooCommerce, Dokan, and Easy Digital Downloads (EDD).
+
+### [1.1.0] - 2024-10-24
+- Refactored plugin architecture for better maintainability.
+- Moved table creation and activation hooks to the main plugin class.
+- Enhanced "Notify Me When Available" feature with guest subscription support.
+- Added admin interface for managing subscriptions.
+- Implemented cron job handling within a dedicated class.
+- Improved security measures with nonce validations and data sanitization.
+- Enhanced frontend scripts and styles for better user experience.
 
 ## Frequently Asked Questions
 
 ### 1. **Can I customize the notification emails?**
-Yes, Pre-Order Ultra allows you to customize email and SMS templates to match your brand's voice and messaging needs.
+Yes, Pre-Order Ultra allows you to customize email templates to match your brand's voice and messaging needs.
 
 ### 2. **Does the plugin support variable products?**
 Yes, you can enable pre-orders for variable products. Each variation can have its own pre-order settings.
@@ -211,7 +222,7 @@ Subscribers can be viewed and exported from the admin interface under **WooComme
 
 If you encounter any issues or have questions about Pre-Order Ultra, please reach out to our support team:
 
-- **Email:** support@preorderultra.com
+- **Email:** [support@preorderultra.com](mailto:support@preorderultra.com)
 - **Support Forum:** [WordPress.org Support](#)
 - **Documentation:** Available within the plugin and on our [official website](#).
 
