@@ -26,6 +26,8 @@ class Integration_WooCommerce {
         
         // Cart adjustments
         add_filter( 'woocommerce_cart_item_name', array( $this, 'add_pre_order_label_in_cart' ), 10, 3 );
+
+        add_action( 'woocommerce_single_product_summary', array( $this, 'display_notify_me_form' ), 25 );
     }
 
     public static function get_instance() {
@@ -500,6 +502,30 @@ class Integration_WooCommerce {
         }
 
         return $product_name;
+    }
+
+    /**
+     * Display "Notify Me" Form on Product Pages
+     */
+    public function display_notify_me_form() {
+        global $product;
+
+        // Check if pre-order is enabled and product is not in stock
+        $enable_pre_order = get_post_meta( $product->get_id(), '_enable_pre_order', true );
+        $global_pre_orders_enabled = get_option( 'enable_pre_orders_globally', 'no' );
+        $enable_pre_order_out_of_stock = get_option( 'auto_pre_order_out_of_stock', 'yes' );
+
+        $is_pre_order = false;
+
+        if ( 'yes' === $enable_pre_order ) {
+            $is_pre_order = true;
+        } elseif ( 'yes' === $global_pre_orders_enabled && 'yes' === $enable_pre_order_out_of_stock && ! $product->is_in_stock() ) {
+            $is_pre_order = true;
+        }
+
+        if ( $is_pre_order ) {
+            wc_get_template( 'notify-me-form.php', array(), '', PRE_ORDER_ULTRA_PLUGIN_PATH . 'templates/' );
+        }
     }
 
 }
