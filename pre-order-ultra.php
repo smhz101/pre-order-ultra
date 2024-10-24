@@ -3,7 +3,7 @@
  * Plugin Name: Pre-Order Ultra
  * Plugin URI: https://wpthemepress.com/plugins/pre-order-ultra
  * Description: Adds pre-order functionality to your WooCommerce store.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Your Name
  * Author URI: https://muzammil.dev
  * Text Domain: pre-order-ultra
