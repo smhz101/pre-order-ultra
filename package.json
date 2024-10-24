@@ -1,0 +1,25 @@
+{
+  "name": "pre-order-ultra",
+  "version": "1.0.0",
+  "description": "**Pre-Order Ultra** is a robust WooCommerce plugin that empowers store owners to manage pre-orders effortlessly. Whether you're launching a new product or handling out-of-stock inventory, Pre-Order Ultra offers the essential tools to capture customer interest and streamline your sales process.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "gulp": "^5.0.0",
+    "gulp-clean": "^0.4.0",
+    "gulp-clean-css": "^4.3.0",
+    "gulp-concat": "^2.6.1",
+    "gulp-imagemin": "^9.1.0",
+    "gulp-pug": "^5.0.0",
+    "gulp-sass": "^5.1.0",
+    "gulp-sourcemaps": "^3.0.0",
+    "gulp-uglify": "^3.0.2",
+    "gulp-wp-pot": "^2.5.0",
+    "gulp-zip": "^6.0.0"
+  }
+}
